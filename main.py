@@ -2,6 +2,7 @@ import pygame
 
 import assets
 import configs
+from highscore import load_highscore, save_highscore
 from objects.background import Background
 from objects.bird import Bird
 from objects.column import Column
@@ -19,6 +20,8 @@ pygame.display.set_caption("Flappy Galo de Calça")
 img = pygame.image.load('assets/icons/galo-downflap.png')
 pygame.display.set_icon(img)
 
+custom_font_path = 'assets/fonts/PublicPixelFont/PublicPixel-E447g.ttf'
+custom_font = pygame.font.Font(custom_font_path, 12)
 
 clock = pygame.time.Clock()
 column_create_event = pygame.USEREVENT
@@ -30,6 +33,8 @@ assets.load_sprites()
 assets.load_audios()
 
 sprites = pygame.sprite.LayeredUpdates()
+
+highscore = load_highscore()
 
 
 def create_sprites():
@@ -80,10 +85,23 @@ while running:
         pygame.time.set_timer(column_create_event, 0)
         assets.play_audio("hit")
 
-    for sprite in sprites:
-        if type(sprite) is Column and sprite.is_passed():
-            score.value += 1
-            assets.play_audio("point")
+        # checking score
+        if score and score.value > highscore:
+            highscore = score.value
+            save_highscore(highscore)
+
+    if score is not None:
+        for sprite in sprites:
+            if type(sprite) is Column and sprite.is_passed():
+                score.value += 1
+                assets.play_audio("point")
+
+    if not gamestarted and not gameover:
+        # Displaying the high score on the screen
+        highscore_text = custom_font.render(f"High Score: {highscore}", True, (255, 255, 255))
+        screen.blit(highscore_text, (10, 10))
+
+
 
     pygame.display.flip()
     clock.tick(configs.FPS)
