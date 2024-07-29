@@ -38,10 +38,11 @@ def create_sprites():
     Floor(0, sprites)
     Floor(1, sprites)
 
-    return Bird(sprites), GameStartMessage(sprites), Score(sprites)
+    return Bird(sprites), GameStartMessage(sprites)
 
 
-bird, game_start_message, score = create_sprites()
+bird, game_start_message = create_sprites()
+score = None
 
 while running:
     for event in pygame.event.get():
@@ -53,12 +54,14 @@ while running:
             if event.key == pygame.K_SPACE and not gamestarted and not gameover:
                 gamestarted = True
                 game_start_message.kill()
+                score = Score(sprites)
                 pygame.time.set_timer(column_create_event, 1500)
             if event.key == pygame.K_ESCAPE and gameover:
                 gameover = False
                 gamestarted = False
                 sprites.empty()
-                bird, game_start_message, score = create_sprites()
+                score = None
+                bird, game_start_message = create_sprites()
 
         if not gameover:
             bird.handle_event(event)
