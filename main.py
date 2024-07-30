@@ -36,6 +36,9 @@ sprites = pygame.sprite.LayeredUpdates()
 
 highscore = load_highscore()
 
+# Storing the selected bird type (testing, I might remove this later)
+selected_bird = 'galo'
+
 
 def create_sprites():
     Background(0, sprites)
@@ -43,11 +46,20 @@ def create_sprites():
     Floor(0, sprites)
     Floor(1, sprites)
 
-    return Bird(sprites), GameStartMessage(sprites)
+    print(f"Creating bird {selected_bird}") #check which type the program got.
+    return Bird(selected_bird, sprites), GameStartMessage(sprites)
 
 
 bird, game_start_message = create_sprites()
 score = None
+
+# reset function that allows the sprite change
+def reset_game():
+    global bird, game_start_message, score
+    sprites.empty()
+    bird, game_start_message = create_sprites()
+    score = None
+
 
 while running:
     for event in pygame.event.get():
@@ -67,6 +79,17 @@ while running:
                 sprites.empty()
                 score = None
                 bird, game_start_message = create_sprites()
+            # selecting different birds
+            if event.key == pygame.K_1:
+                selected_bird = 'galo'
+                print(f"selected bird: {selected_bird}")
+                if not gamestarted:
+                    reset_game()
+            if event.key == pygame.K_2:
+                selected_bird = 'redbird'
+                print(f"selected bird: {selected_bird}")
+                if not gamestarted:
+                    reset_game()
 
         if not gameover:
             bird.handle_event(event)
@@ -100,8 +123,6 @@ while running:
         # Displaying the high score on the screen
         highscore_text = custom_font.render(f"High Score: {highscore}", True, (255, 255, 255))
         screen.blit(highscore_text, (10, 10))
-
-
 
     pygame.display.flip()
     clock.tick(configs.FPS)

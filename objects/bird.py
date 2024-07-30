@@ -8,13 +8,15 @@ from objects.floor import Floor
 
 
 class Bird(pygame.sprite.Sprite):
-    def __init__(self, *groups):
+    def __init__(self, bird_type='galo', *groups):
         self._layer = Layer.PLAYER
 
+        self.bird_type = bird_type
+
         self.images = [
-            assets.get_sprite("galo-upflap"),
-            assets.get_sprite("galo-midflap"),
-            assets.get_sprite("galo-downflap")
+            assets.get_sprite(f"{bird_type}-upflap"),
+            assets.get_sprite(f"{bird_type}-midflap"),
+            assets.get_sprite(f"{bird_type}-downflap")
         ]
 
         self.image = self.images[0]
