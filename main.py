@@ -21,13 +21,20 @@ img = pygame.image.load('assets/icons/galo-downflap.png')
 pygame.display.set_icon(img)
 
 custom_font_path = 'assets/fonts/PublicPixelFont/PublicPixel-E447g.ttf'
-custom_font = pygame.font.Font(custom_font_path, 12)
+custom_font = pygame.font.Font(custom_font_path, 11)
+
+# Load background image (it will be used on the selection screen)
+background_image = pygame.image.load('assets/sprites/background.png')
+# Load the bird preview images
+galo_de_calca_image = pygame.image.load('assets/sprites/galo-downflap.png')
+red_bird_image = pygame.image.load('assets/sprites/redbird-downflap.png')
 
 clock = pygame.time.Clock()
 column_create_event = pygame.USEREVENT
 running = True
 gameover = False
 gamestarted = False
+show_selection_screen = False
 
 assets.load_sprites()
 assets.load_audios()
@@ -36,7 +43,6 @@ sprites = pygame.sprite.LayeredUpdates()
 
 highscore = load_highscore()
 
-# Storing the selected bird type (testing, I might remove this later)
 selected_bird = 'galo'
 
 
@@ -46,12 +52,12 @@ def create_sprites():
     Floor(0, sprites)
     Floor(1, sprites)
 
-    print(f"Creating bird {selected_bird}") #check which type the program got.
     return Bird(selected_bird, sprites), GameStartMessage(sprites)
 
 
 bird, game_start_message = create_sprites()
 score = None
+
 
 # reset function that allows the sprite change
 def reset_game():
@@ -61,6 +67,31 @@ def reset_game():
     score = None
 
 
+# BIRD SELECTION SCREEN
+def display_selection_screen():
+    screen.blit(background_image, (0, 0))
+
+    selection_text = custom_font.render("Select your bird", True, (255, 255, 255))
+    screen.blit(selection_text, (configs.SCREEN_WIDTH // 2 - selection_text.get_width() // 2, 50))
+
+    # Alignement do adjust all bird names based on the 'select your bird' message
+    alignment = (configs.SCREEN_WIDTH // 2 - selection_text.get_width() // 2) + 30
+
+    galo_de_calca_text = custom_font.render("1: Galo de Calça", True, (255, 255, 255))
+    screen.blit(galo_de_calca_text, (alignment, 120))
+    screen.blit(galo_de_calca_image, (45, 112))
+
+    red_bird_text = custom_font.render("2: Red Bird", True, (255, 255, 255))
+    screen.blit(red_bird_text, (alignment, 160))
+    screen.blit(red_bird_image, (45, 152))
+
+    esc_text = custom_font.render("Press ESC to go back", True, (255, 255, 255))
+    screen.blit(esc_text, (configs.SCREEN_WIDTH // 2 - esc_text.get_width() // 2, 440))
+
+    pygame.display.flip()
+
+
+# MAIN LOOP HERE
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -68,7 +99,7 @@ while running:
         if event.type == column_create_event:
             Column(sprites)
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_SPACE and not gamestarted and not gameover:
+            if event.key == pygame.K_SPACE and not gamestarted and not gameover and not show_selection_screen:
                 gamestarted = True
                 game_start_message.kill()
                 score = Score(sprites)
@@ -76,23 +107,33 @@ while running:
             if event.key == pygame.K_ESCAPE and gameover:
                 gameover = False
                 gamestarted = False
-                sprites.empty()
-                score = None
-                bird, game_start_message = create_sprites()
-            # selecting different birds
-            if event.key == pygame.K_1:
+                reset_game()
+
+            # SELECTION SCREEN CONDITIONALS:
+            if event.key == pygame.K_s and not gamestarted:
+                # Open Selection Screen
+                show_selection_screen = True
+            if event.key == pygame.K_1 and show_selection_screen:
                 selected_bird = 'galo'
-                print(f"selected bird: {selected_bird}")
-                if not gamestarted:
-                    reset_game()
-            if event.key == pygame.K_2:
+                show_selection_screen = False
+                reset_game()
+            if event.key == pygame.K_2 and show_selection_screen:
                 selected_bird = 'redbird'
-                print(f"selected bird: {selected_bird}")
-                if not gamestarted:
-                    reset_game()
+                show_selection_screen = False
+                reset_game()
+            if event.key == pygame.K_ESCAPE and show_selection_screen:
+                # Closes Selection Screen if the user does not want to do anything
+                gameover = False
+                gamestarted = False
+                show_selection_screen = False
+                reset_game()
 
         if not gameover:
             bird.handle_event(event)
+
+    if show_selection_screen:
+        display_selection_screen()
+        continue
 
     screen.fill(0)
 
@@ -119,10 +160,14 @@ while running:
                 score.value += 1
                 assets.play_audio("point")
 
-    if not gamestarted and not gameover:
+    if not gamestarted and not gameover and not show_selection_screen:
         # Displaying the high score on the screen
         highscore_text = custom_font.render(f"High Score: {highscore}", True, (255, 255, 255))
-        screen.blit(highscore_text, (10, 10))
+        screen.blit(highscore_text, (configs.SCREEN_WIDTH // 2 - highscore_text.get_width() // 2, 50))
+
+        # Text on the main screen:
+        selection_button_text = custom_font.render("Press 'S' to select birds", True, (83, 138, 33))
+        screen.blit(selection_button_text, (configs.SCREEN_WIDTH // 2 - selection_button_text.get_width() // 2, 450))
 
     pygame.display.flip()
     clock.tick(configs.FPS)
